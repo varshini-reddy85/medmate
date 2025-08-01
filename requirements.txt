@@ -1,3 +1,7 @@
 streamlit
-pillow
-playsound
+plyer
+datetime
+time
+os
+schedule
+threading
