@@ -1,63 +1,43 @@
 import streamlit as st
-from datetime import datetime
-import json
-import os
-from PIL import Image
+from datetime import datetime, time
 
-# Load existing reminders
-def load_reminders():
-    if os.path.exists("reminders.json"):
-        with open("reminders.json", "r") as file:
-            return json.load(file)
-    return []
+# App title
+st.title("💊 MedMate - Personal Medicine Reminder App")
 
-# Save reminders to JSON
-def save_reminders(reminders):
-    with open("reminders.json", "w") as file:
-        json.dump(reminders, file, indent=4)
+# Session state to store reminders
+if 'reminders' not in st.session_state:
+    st.session_state.reminders = []
 
-# Create images folder if not exists
-if not os.path.exists("images"):
-    os.makedirs("images")
+# 📸 Upload Medicine Photo
+st.subheader("📷 Upload Medicine Photo (Optional)")
+uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+if uploaded_file is not None:
+    st.image(uploaded_file, caption="Medicine Preview", width=150)
 
-# UI
-st.title("💊 MedMate: Personal Medicine Reminder")
+# Reminder input
+st.subheader("🔔 Set a Reminder")
+reminder_time = st.time_input("Select time:", value=datetime.now().time())
+reminder_message = st.text_input("Enter medicine name or reminder message")
 
-# Reminder form
-with st.form("reminder_form"):
-    name = st.text_input("Medicine Name")
-    dosage = st.text_input("Dosage (e.g:2 pills)")
-    time = st.time_input("Reminder Time")
-    image = st.file_uploader("Upload Medicine Photo", type=["jpg", "jpeg", "png"])
-    submitted = st.form_submit_button("Set Reminder")
-
-    if submitted:
-        image_filename = None
-        if image is not None:
-            image_filename = f"images/{name}_{datetime.now().strftime('%Y%m%d%H%M%S')}.png"
-            with open(image_filename, "wb") as f:
-                f.write(image.read())
-
-        reminders = load_reminders()
-        reminders.append({
-            "name": name,
-            "dosage": dosage,
-            "time": time.strftime("%H:%M"),
-            "image": image_filename
+# Add reminder
+if st.button("Add Reminder"):
+    if reminder_message:
+        st.session_state.reminders.append({
+            "time": reminder_time.strftime("%I:%M %p"),
+            "message": reminder_message
         })
-        save_reminders(reminders)
-        st.success("✅ Reminder set successfully!")
+        st.success("Reminder added!")
+    else:
+        st.warning("Please enter a reminder message.")
 
-# Display reminders
-st.subheader("📅 Your Reminders:")
-reminders = load_reminders()
-if reminders:
-    for r in reminders:
-        st.markdown(f"**🕒 {r['time']}**")
-        st.markdown(f"- **Medicine:** {r['name']}")
-        st.markdown(f"- **Dosage:** {r['dosage']}")
-        if r["image"]:
-            st.image(r["image"], width=150)
-        st.markdown("---")
+# Display current reminders
+if st.session_state.reminders:
+    st.subheader("⏰ Your Reminders")
+    for i, rem in enumerate(st.session_state.reminders):
+        st.write(f"🕒 **{rem['time']}** - {rem['message']}")
+        if st.button(f"Delete Reminder {i+1}", key=f"delete_{i}"):
+            st.session_state.reminders.pop(i)
+            st.success("Reminder deleted.")
+            st.experimental_rerun()
 else:
-    st.info("No reminders yet.")
+    st.info("No reminders added yet.")

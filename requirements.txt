@@ -1,7 +1,1 @@
-streamlit
-plyer
-datetime
-time
-os
-schedule
-threading
+streamlit==1.34.0
